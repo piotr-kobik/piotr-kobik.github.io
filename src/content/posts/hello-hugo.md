@@ -1,7 +1,7 @@
 ---
 title: "Hello Hugo"
 date: 2020-05-14T17:01:24+02:00
-draft: true
+draft: false
 ---
 
 this is a test
