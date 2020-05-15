@@ -3,6 +3,10 @@ title: "Ryż Garam Masala"
 date: 2020-05-15T10:39:35+02:00
 draft: false
 ---
+|kcal|carb|fat|prot|fiber|
+|-|-|-|-|-|
+|123|123|123|123|123|
+
 Na dwie porcje
 * 150 g ryżu
 * 500 ml wody
