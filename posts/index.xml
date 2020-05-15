@@ -21,26 +21,5 @@
  150 g ryżu 500 ml wody 10 g cukru (trzcinowego) 1 płaska łyżeczka garam masala 200 ml mleka 1 jabłko sok z cytryny   ryż, wodę, cukier i garam masala gotwać na małym ogniu przez 15 minut dodać mleko i gotować kolejne 10 minut jabłko obrać, pokroić na kawałki, wrzucić do miseczek i obficie skropić sokiem z cytryny rozłożyć ryż do miseczek można dodatkowo posypać przyprawą  </description>
     </item>
     
-    <item>
-      <title>2nd Post</title>
-      <link>http://piotr-kobik.github.io/posts/2nd-post/</link>
-      <pubDate>Thu, 14 May 2020 17:20:03 +0200</pubDate>
-      
-      <guid>http://piotr-kobik.github.io/posts/2nd-post/</guid>
-      <description>Hmm&amp;hellip; this is a second hugo post</description>
-    </item>
-    
-    <item>
-      <title>Hello Hugo</title>
-      <link>http://piotr-kobik.github.io/posts/hello-hugo/</link>
-      <pubDate>Thu, 14 May 2020 17:01:24 +0200</pubDate>
-      
-      <guid>http://piotr-kobik.github.io/posts/hello-hugo/</guid>
-      <description>this is a test
-looks like it works in almst real time :)
-** title **
-test</description>
-    </item>
-    
   </channel>
 </rss>
