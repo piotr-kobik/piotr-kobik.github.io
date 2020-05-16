@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>GRUB | My notes on Linux, python, food, life and everyting</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body>
+	<header class="header">
+	<a class="logo" href="/">My notes on Linux, python, food, life and everyting</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">GRUB</h1>
+				<div class="entry__content"><h3 id="uefi-firmware-menu-entry">UEFI firmware menu entry</h3>
+<p><strong><code>/etc/grub.d/40_custom</code></strong></p>
+<pre><code>if [ ${grub_platform} == &quot;efi&quot; ]; then
+	menuentry &quot;Firmware setup&quot; {
+		fwsetup
+	}
+fi
+</code></pre><h3 id="encrypted-system">encrypted system</h3>
+<p>configure <a href="../system-encryption">system encryption</a> and add following options to <code>/etc/default/grub</code></p>
+<pre><code>GRUB_ENABLE_CRYPTODISK=y
+GRUB_CMDLINE_LINUX=&quot;cryptdevice=UUID=device-uud:cryptroot root=/dev/mapper/cryptroot cryptkey=rootfs:/root/cryptroot.keyfile&quot;
+
+</code></pre><p>the easy way is to use <code>cryptdevice=/dev/sda2</code> but UUID would be preffered</p>
+<p>Remember to reinstall grub afer enabling encryption</p>
+<h3 id="grub-install">grub install</h3>
+<p>Install grub to <code>/efi</code> partition</p>
+<pre><code>$ grub-install --boot-directory=/efi --bootloader-id=grub --efi-directory=/efi --target=x86_64-efi
+</code></pre><p>And generate grub config. Remember it is installed in <code>/efi</code>.</p>
+<pre><code>$ grub-mkconfig -o /efi/grub/grub.cfg
+</code></pre></div>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2020 My notes on Linux, python, food, life and everyting. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

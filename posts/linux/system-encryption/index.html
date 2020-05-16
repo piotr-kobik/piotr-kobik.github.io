@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>System encryption | My notes on Linux, python, food, life and everyting</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body>
+	<header class="header">
+	<a class="logo" href="/">My notes on Linux, python, food, life and everyting</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">System encryption</h1>
+				<div class="entry__content"><h2 id="prepare-system-partition">Prepare system partition</h2>
+<p>Only LUKS type 1 is supported for GRUB at this moment.</p>
+<p>Create container</p>
+<pre><code>cryptosetup luksFormat --type luks1 /dev/sda2
+</code></pre><p>and open it</p>
+<pre><code>cryptosetup open /dev/sda2 cryptroot
+</code></pre><p><code>cryptroot</code> is the name of the opened luks container to be find in <code>/dev/mapper</code></p>
+<p>you can craete your file system inside.</p>
+<pre><code>mkfs.btrfs /dev/mapper/cryptroot
+</code></pre><h2 id="boot-loader-configuration">boot loader configuration</h2>
+<h3 id="enable-encrypt-hook">enable encrypt hook</h3>
+<p>add encrypt hook to <code>mkinitcpio.conf</code></p>
+<pre><code>HOOKS=(base udev autodetect keyboard keymap consolefont modconf block *encrypt* filesystems fsck)
+</code></pre><h3 id="generate-and-add-keyfile">generate and add keyfile</h3>
+<pre><code>$ dd bs=512 count=4 if=/dev/random of=/root/cryptroot.keyfile iflag=fullblock
+$ chmod 000 /root/cryptroot.keyfile
+$ cryptsetup luksAddKey /dev/sda2 /root/cryptroot.keyfile
+</code></pre><p>after creting and adding key to container, add keyfile to initramfs image and to kernel parameters
+<code>mkinitcpio.conf</code></p>
+<pre><code>FILES=(/root/cryptroot.keyfile)
+</code></pre><p>Refresh initramfs image</p>
+<pre><code>$ mkinitcpio -p linux
+</code></pre><p>And secure the embeded key file</p>
+<pre><code>$ chmod 600 /boot/initramfs-linux*
+</code></pre><h3 id="configure-bootloader">configure bootloader</h3>
+<p>Set the following kernel param for grub
+<code>/etc/default/grub</code></p>
+<pre><code>GRUB_CMDLINE_LINUX=&quot;... cryptkey=rootfs:/root/cryptroot.keyfile&quot;
+</code></pre><p>and regenerate grub config</p>
+<h2 id="to-consider-test-and-describe">to consider, test and describe</h2>
+<ol>
+<li>what about btrfs volumes on several different devices? should lvm be used? lvm (dev1, dev2) -&gt; luks -&gt; btrfs ?</li>
+</ol>
+</div>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2020 My notes on Linux, python, food, life and everyting. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

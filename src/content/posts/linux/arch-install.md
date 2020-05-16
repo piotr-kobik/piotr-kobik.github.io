@@ -1,7 +1,7 @@
 ---
 title: "Arch install"
 date: 2020-05-16
-draft: true
+draft: false
 ---
 
 # network and system time
@@ -11,16 +11,16 @@ manuall configuration is needed if wifi is used
 
 to check if interface is up and running
 ```
-$ ip link 
+# ip link 
 ```
 
 to get auto address
 ```
-$ dhcpcd
+# dhcpcd
 ```
 to validate
 ```
-$ ping archlinux.org
+# ping archlinux.org
 ```
 
 system clock
@@ -33,7 +33,8 @@ system clock
 list drives and partitions
 
 ```
-fdisk -l
+# blkid
+# fdisk -l
 ```
 
 ### create new gpt partition table
@@ -43,67 +44,69 @@ fdisk -l
 ### format efi partition
 format efi partition
 ```
-mkfs.vfat /dev/sda1
+# mkfs.vfat /dev/sda1
 ```
 
 ### create and open LUKS container
 [System encryption](../system-encryption)
 
 ```
-cryptsetup open /dev/sda2 cryptroot
+# cryptsetup open /dev/sda2 cryptroot
 ```
 
 ### create root filesystem
 ```
-mkfs.btrfs /dev/mapper/cryptroot
+# mkfs.btrfs /dev/mapper/cryptroot
 ```
 
 # mount and create subvolumes
 create subvolumes
 ```
-mkdir /mnt/{btrfs_root,arch}
-mount /dev/mapper/cryptroot /mnt/btrfs_root
-btrfs subvolume create /mnt/btrfs_root/@
-btrfs subvolume create /mnt/btrfs_root/@home
-btrfs subvolume create /mnt/btrfs_root/@snapshots
-mkdir /mnt/btrfs_root/@/var
-btrfs subvolume create /mnt/btrfs_root/@/var/log
-btrfs subvolume create /mnt/btrfs_root/@/var/tmp
-mkdir -p /mnt/btrfs_root/@/var/cache/pacman
-btrfs subvolume create /mnt/btrfs_root/@/var/cache/pacman/pkg
+# mkdir /mnt/{btrfs_root,arch}
+# mount /dev/mapper/cryptroot /mnt/btrfs_root
+# btrfs subvolume create /mnt/btrfs_root/@
+# btrfs subvolume create /mnt/btrfs_root/@home
+# btrfs subvolume create /mnt/btrfs_root/@snapshots
+# mkdir /mnt/btrfs_root/@/var
+# btrfs subvolume create /mnt/btrfs_root/@/var/log
+# btrfs subvolume create /mnt/btrfs_root/@/var/tmp
+# mkdir -p /mnt/btrfs_root/@/var/cache/pacman
+# btrfs subvolume create /mnt/btrfs_root/@/var/cache/pacman/pkg
 ```
 and mount all together
 ```
-mount /dev/mapper/cryptroot /mnt/arch -o subvol=@
-mkdir /mnt/arch/{efi,home}
-mount /dev/mapper/cryptroot /mnt/arch/home -o subvol=@home
-mount /dev/sda1 /mnt/arch/efi
+# mount /dev/mapper/cryptroot /mnt/arch -o subvol=@
+# mkdir /mnt/arch/{efi,home}
+# mount /dev/mapper/cryptroot /mnt/arch/home -o subvol=@home
+# mount /dev/sda1 /mnt/arch/efi
 ```
 # install
 ## core arch and utilities
 ```
-$ pacstrap /mnt/arch base linux linux-firmware efibootmgr grub vim sudo dosfstools btrfs-progs man-db man-pages texinfo intel-ucode bash-completion
+# pacstrap /mnt/arch base linux linux-firmware efibootmgr grub vim \
+sudo dosfstools btrfs-progs man-db man-pages texinfo intel-ucode \
+bash-completion
 ```
 create fstab
 ```
-$ genfstab /mnt/arch >> /mnt/arch/etc/fstab
+# genfstab /mnt/arch >> /mnt/arch/etc/fstab
 ```
 change root to new arch install
 
 ```
-arch-chroot /mnt/arch
+# arch-chroot /mnt/arch
 ```
 ## set timezone and system clock
 ```
-$ ln -sf /usr/share/zoneinfo/Poland /etc/localtime
-$ hwclock --systohc
+# ln -sf /usr/share/zoneinfo/Poland /etc/localtime
+# hwclock --systohc
 ```
 
 ## set locales
 uncomment en_US.UTF-8 and pl_PL.UTF-8 in `/etc/locale.gen`
 generate locales
 ```
-locale-gen
+# locale-gen
 ```
 set `/etc/locale.conf`
 ```
@@ -122,7 +125,7 @@ TODO
 ## network configuration
 set hostname
 ```
-$ echo archie > /etc/hostname
+# echo archie > /etc/hostname
 ```
 `/etc/hosts`
 ```
@@ -145,62 +148,60 @@ DNS=8.8.4.4
 ```
 enable network on start
 ```
-$ systemctl enable systemd-networkd
-$ systemctl enable systemd-resolved
+# systemctl enable systemd-networkd
+# systemctl enable systemd-resolved
 ```
 
 ## set root password
 
 ```
-passwd
+# passwd
 ```
 
-## grub with encryption
-install grub into efi partition
+## configure grub
+Follow [grub](../grub) for detalis.
+
+## reboot
+if all is fine, especially grub configuration, it shour reboot now.
+leave chroot environ with `CTRL-D`, unmount and close luks container
 ```
-$ grub-install --boot-directory=/efi --bootloader-id=grub --efi-directory=/efi --target=x86_64-efi
+# umount -R /mnt/arch
+# umount -R /mnt/btrfs_root
+# cryptsetup close /dev/mapper/cryptroot
+# shutdown -r now
+
 ```
-
-add efi menu entry for grub
-[efi menu entry](../grub)
-this comes very handy especially on vm
-
-make grub aware of encrypted root partition
-
-$ grub-mkconfig -o /boot/grub/grub.cfg
-
 ----
 # the install
 
 
-boot loader
-
-
-reboot
-user management
+## user management
 modify /etc/default/useradd
 fix HOME variable if using 'layered' home folder
 
 $ useradd -m -G wheel piotr
 $ passwd piotr
 
-modify sudoers
+## modify sudoers
 openssh
 $ pacman -S openssh
 $ sudo systemctl enable sshd
 
-use latest bitvise ssh version
-virtualbox guest (if running as a guest)
+## virtualbox guest (if running as a guest)
 sudo pacman -S virtualbox-guest-utils xf86-video-vmware
 
-$ sudo systemctl enable vboxservice
+```
+# sudo systemctl enable vboxservice
+```
 
 modify /etc/fstab to mount /xtra and windows. check if it mounts automatically
 
-mount windows and xtra drives
-GUI
-$pacman -S nvidia nvidia-settings
-gnome
+# GUI
+```
+# pacman -S nvidia nvidia-settings
+```
+
+## gnome
 $ pacman -S gnome gnome-tweaks chrome-gnome-shell
 (co wybrac)
 eog 
@@ -264,106 +265,9 @@ enambel multilib
 sudo pacman -S lib32-nvidia-utils
 python
 pycharm
-postgresql ?
-dbeaver
-java (open java)
 
 terminator?
 
-procedure
-prepare for install
-format drive with btrfs and create @ subvolume for timeshift
-
-blkid to list devices
-
-fdisk /dev/sdc to manage partitions on 2nd ssd drive, which is for linux in my case
-
-/dev/sdc1 is for home, 176GB
-/dev/sdc2 is for arch-root, main arch installation
-/dev/sdc3 is for arch-testing, to play around withour taking risk to brake main installation
-/dev/sdc4 is for pop os to try and compare if it has anything i would need in arch. or for any other distro
-
-mkfs.btrfs -L <label> -f /dev/sdc<x>
-
-for btrfs create @ subvol
-mount /dev/sdc3 /mnt
-btrfs subvolume create @ /
-do not set @ as default volume. it hides @ and timeshift does not work
-
-umount /mnt
-mount -o subvol=@ /dev/sdc3 /mnt
-mkdir -p /mnt/{boot/efi,home}
-mount /dev/sda2 /mnt/boot/efi
-mount /dev/sdc1 /mnt/home (to be verified)
-
-install core with base devel, a co
-
-pacstrap /mnt base base-devel linux linux-firmware
-
-genfstab -L /mnt >> /mnt/etc/fstab
-
-change root to dev because timeshift does not support labels :/
-
-arch-chroot /mnt
-
-install basic tools
-
-pacman -S efibootmgr, os-prober vim sudo dosfstools exfat-utils ntfs-3g man-db man-pages texinfo intel-ucode pacman-contrib
-
-basic config
-
-timezone
-ln -sf /usr/share/zoneinfo/Poland /etc/localtime
-hwclock --systohc
-
-localization
-/etc/locale.gen
-en_US.UTF-8
-pl_PL.UTF-8
-
-locale-gen
-
-/etc/locale.conf
-LANG=pl_PL.UTF-8
-LC_MESSAGES=en_US.UTF-8
-
-network
-
-/etc/hosts
-127.0.0.1 localhost
-::1 localhost
-102.0.0.1 sandman-test.localdomain sandman-test
-
-/etc/systemd/network/20-wired.network
-[Match]
-Name=enp0s3
-
-[Network]
-Address=192.168.1.117/24
-Gateway=192.168.1.1
-DNS=8.8.8.8
-DNS=8.8.4.4
-
-systemctl enable systemd-networkd
-systemctl enable systemd-resolved
-
-/etc/pacman.conf
-enable multilib
-
-/etc/default/useradd
-/home/arch
-
-pacman -Syu
-
-root password
-
-passwd
-
-grub-install --target=x86_64-efi --efi=/boot/efi --bootloader-id=GRUB
-to chyba nawet nie bedzie potrzebne
-grub-mkconfig -o /boot/grub/grub.cfg
-
-gui
 
 pacman -S nvidia nvidia-settings lib32-nvidia-utils 
 
@@ -394,32 +298,32 @@ gvfs-mtp
 totem
 
 
-chromium
+### chromium
 chromium chrome-gnome-shell
 aur: chromium-widevine
 
-backup and sys utils
+### backup and sys utils
 aur: timeshift 
 aur: backintime
 aur: stacer
 
-graphic and video
+### graphic and video
 darktable
 eog
 totem (video player, installl gst-libav to play mp4)
 
-terminals
+### terminals
 terminator
 cool-retro-term (?)
 
-music
+### music
 aur: spotify
 
-games
+### games
 steam
 teamspeak3
 
-development
+### development
 pycharm-community-edition
 (sql: postgresql, dbeaver)
 

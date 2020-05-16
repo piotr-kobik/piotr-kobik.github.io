@@ -26,6 +26,19 @@
 			<div class="cards">
 					<div class="card card--2col">
 					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/linux/arch-install/">Arch install</a></h1>
+	<div class="entry__content">network and system time network should be already setup and running
+manuall configuration is needed if wifi is used
+to check if interface is up and running
+# ip link to get auto address
+# dhcpcd to validate
+# ping archlinux.org system clock
+# timedatectl set-ntp true partitioning (using efi, luks and btrfs) list drives and partitions
+# blkid # fdisk -l create new gpt partition table  create efi partition, about 100 MB, type 1 create linux partion  format efi partition format efi partition</div>
+</article>
+					</div>
+					<div class="card card--2col">
+					<article class="entry card__box block">
 	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/food/bulion-warzywny/">Bulion warzywny</a></h1>
 	<div class="entry__content">Na 2 litry
  1 cebula 2 marchewki 2 łodygi selera naciowego 2 pieczarki 1 pomidor 2 łyżki oleju do smażenia 1/2 łyżeczki soli  </div>
@@ -33,8 +46,31 @@
 					</div>
 					<div class="card card--2col">
 					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/linux/grub/">GRUB</a></h1>
+	<div class="entry__content">UEFI firmware menu entry /etc/grub.d/40_custom
+if [ ${grub_platform} == &quot;efi&quot; ]; then menuentry &quot;Firmware setup&quot; { fwsetup } fi encrypted system configure system encryption and add following options to /etc/default/grub
+GRUB_ENABLE_CRYPTODISK=y GRUB_CMDLINE_LINUX=&quot;cryptdevice=UUID=device-uud:cryptroot root=/dev/mapper/cryptroot cryptkey=rootfs:/root/cryptroot.keyfile&quot; the easy way is to use cryptdevice=/dev/sda2 but UUID would be preffered
+Remember to reinstall grub afer enabling encryption
+grub install Install grub to /efi partition
+$ grub-install --boot-directory=/efi --bootloader-id=grub --efi-directory=/efi --target=x86_64-efi And generate grub config. Remember it is installed in /efi.</div>
+</article>
+					</div>
+					<div class="card card--2col">
+					<article class="entry card__box block">
 	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/food/muszle-nadziewane-warzywami-i-mozzarella/">Muszle nadziewane grillowanymi warzywami i mozzarellą</a></h1>
 	<div class="entry__content">   kcal carb fat prot fiber     123 123 123 123 123    składniki/4 porcje  14 muszli makaronowych 1/2 czerwonej papryki 1/2 żółtej papryki cebula 1/2 cukinii 1 kulka mozzarelli 100 g sera koziego lub feta mascarpone oliwa pomidorki koktajlowe  sos pomidorowy  1 puszka pomidorów pokrojonych 250 ml passaty 1 łyżeczka suszonego oregano sól, pieprz oliwa  </div>
+</article>
+					</div>
+					<div class="card card--2col">
+					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/linux/system-encryption/">System encryption</a></h1>
+	<div class="entry__content">Prepare system partition Only LUKS type 1 is supported for GRUB at this moment.
+Create container
+cryptosetup luksFormat --type luks1 /dev/sda2 and open it
+cryptosetup open /dev/sda2 cryptroot cryptroot is the name of the opened luks container to be find in /dev/mapper
+you can craete your file system inside.
+mkfs.btrfs /dev/mapper/cryptroot boot loader configuration enable encrypt hook add encrypt hook to mkinitcpio.conf
+HOOKS=(base udev autodetect keyboard keymap consolefont modconf block *encrypt* filesystems fsck) generate and add keyfile $ dd bs=512 count=4 if=/dev/random of=/root/cryptroot.</div>
 </article>
 					</div>
 					<div class="card card--2col">

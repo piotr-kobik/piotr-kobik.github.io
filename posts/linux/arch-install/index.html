@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Arch install | My notes on Linux, python, food, life and everyting</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body>
+	<header class="header">
+	<a class="logo" href="/">My notes on Linux, python, food, life and everyting</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Arch install</h1>
+				<div class="entry__content"><h1 id="network-and-system-time">network and system time</h1>
+<p>network should be already setup and running</p>
+<p>manuall configuration is needed if wifi is used</p>
+<p>to check if interface is up and running</p>
+<pre><code># ip link 
+</code></pre><p>to get auto address</p>
+<pre><code># dhcpcd
+</code></pre><p>to validate</p>
+<pre><code># ping archlinux.org
+</code></pre><p>system clock</p>
+<pre><code># timedatectl set-ntp true
+</code></pre><h1 id="partitioning-using-efi-luks-and-btrfs">partitioning (using efi, luks and btrfs)</h1>
+<p>list drives and partitions</p>
+<pre><code># blkid
+# fdisk -l
+</code></pre><h3 id="create-new-gpt-partition-table">create new gpt partition table</h3>
+<ol>
+<li>create efi partition, about 100 MB, type 1</li>
+<li>create linux partion</li>
+</ol>
+<h3 id="format-efi-partition">format efi partition</h3>
+<p>format efi partition</p>
+<pre><code># mkfs.vfat /dev/sda1
+</code></pre><h3 id="create-and-open-luks-container">create and open LUKS container</h3>
+<p><a href="../system-encryption">System encryption</a></p>
+<pre><code># cryptsetup open /dev/sda2 cryptroot
+</code></pre><h3 id="create-root-filesystem">create root filesystem</h3>
+<pre><code># mkfs.btrfs /dev/mapper/cryptroot
+</code></pre><h1 id="mount-and-create-subvolumes">mount and create subvolumes</h1>
+<p>create subvolumes</p>
+<pre><code># mkdir /mnt/{btrfs_root,arch}
+# mount /dev/mapper/cryptroot /mnt/btrfs_root
+# btrfs subvolume create /mnt/btrfs_root/@
+# btrfs subvolume create /mnt/btrfs_root/@home
+# btrfs subvolume create /mnt/btrfs_root/@snapshots
+# mkdir /mnt/btrfs_root/@/var
+# btrfs subvolume create /mnt/btrfs_root/@/var/log
+# btrfs subvolume create /mnt/btrfs_root/@/var/tmp
+# mkdir -p /mnt/btrfs_root/@/var/cache/pacman
+# btrfs subvolume create /mnt/btrfs_root/@/var/cache/pacman/pkg
+</code></pre><p>and mount all together</p>
+<pre><code># mount /dev/mapper/cryptroot /mnt/arch -o subvol=@
+# mkdir /mnt/arch/{efi,home}
+# mount /dev/mapper/cryptroot /mnt/arch/home -o subvol=@home
+# mount /dev/sda1 /mnt/arch/efi
+</code></pre><h1 id="install">install</h1>
+<h2 id="core-arch-and-utilities">core arch and utilities</h2>
+<pre><code># pacstrap /mnt/arch base linux linux-firmware efibootmgr grub vim \
+sudo dosfstools btrfs-progs man-db man-pages texinfo intel-ucode \
+bash-completion
+</code></pre><p>create fstab</p>
+<pre><code># genfstab /mnt/arch &gt;&gt; /mnt/arch/etc/fstab
+</code></pre><p>change root to new arch install</p>
+<pre><code># arch-chroot /mnt/arch
+</code></pre><h2 id="set-timezone-and-system-clock">set timezone and system clock</h2>
+<pre><code># ln -sf /usr/share/zoneinfo/Poland /etc/localtime
+# hwclock --systohc
+</code></pre><h2 id="set-locales">set locales</h2>
+<p>uncomment en_US.UTF-8 and pl_PL.UTF-8 in <code>/etc/locale.gen</code>
+generate locales</p>
+<pre><code># locale-gen
+</code></pre><p>set <code>/etc/locale.conf</code></p>
+<pre><code>LANG=en_US.UTF-8
+LC_NUMERIC=pl_PL.UTF-8
+LC_TIME=pl_PL.UTF-8
+LC_MONETARY=pl_PL.UTF-8
+LC_PAPER=pl_PL.UTF-8
+LC_MEASUREMENT=pl_PL.UTF-8
+</code></pre><h2 id="set-keyboard-layout-and-console-font">set keyboard layout and console font</h2>
+<p>TODO</p>
+<h2 id="network-configuration">network configuration</h2>
+<p>set hostname</p>
+<pre><code># echo archie &gt; /etc/hostname
+</code></pre><p><code>/etc/hosts</code></p>
+<pre><code>127.0.0.1 localhost
+::1 localhost
+127.0.0.1 archie.localdomain archie
+</code></pre><p>set dhcp using systemd
+<code>/etc/systemd/netwok/20-wired.network</code></p>
+<pre><code>[Match]
+#Name=enp0s3
+Name=en*
+
+[Network]
+DHCP=ipv4
+DNS=8.8.8.8
+DNS=8.8.4.4
+</code></pre><p>enable network on start</p>
+<pre><code># systemctl enable systemd-networkd
+# systemctl enable systemd-resolved
+</code></pre><h2 id="set-root-password">set root password</h2>
+<pre><code># passwd
+</code></pre><h2 id="configure-grub">configure grub</h2>
+<p>Follow <a href="../grub">grub</a> for detalis.</p>
+<h2 id="reboot">reboot</h2>
+<p>if all is fine, especially grub configuration, it shour reboot now.
+leave chroot environ with <code>CTRL-D</code>, unmount and close luks container</p>
+<pre><code># umount -R /mnt/arch
+# umount -R /mnt/btrfs_root
+# cryptsetup close /dev/mapper/cryptroot
+# shutdown -r now
+
+</code></pre><hr>
+<h1 id="the-install">the install</h1>
+<h2 id="user-management">user management</h2>
+<p>modify /etc/default/useradd
+fix HOME variable if using &lsquo;layered&rsquo; home folder</p>
+<p>$ useradd -m -G wheel piotr
+$ passwd piotr</p>
+<h2 id="modify-sudoers">modify sudoers</h2>
+<p>openssh
+$ pacman -S openssh
+$ sudo systemctl enable sshd</p>
+<h2 id="virtualbox-guest-if-running-as-a-guest">virtualbox guest (if running as a guest)</h2>
+<p>sudo pacman -S virtualbox-guest-utils xf86-video-vmware</p>
+<pre><code># sudo systemctl enable vboxservice
+</code></pre><p>modify /etc/fstab to mount /xtra and windows. check if it mounts automatically</p>
+<h1 id="gui">GUI</h1>
+<pre><code># pacman -S nvidia nvidia-settings
+</code></pre><h2 id="gnome">gnome</h2>
+<p>$ pacman -S gnome gnome-tweaks chrome-gnome-shell
+(co wybrac)
+eog
+evince
+gdm
+gedit
+gnome-calculator
+gnome-keyring (?)
+gnome-session
+gnome-shell
+gnome-shell-extentions
+gnome-terminal
+mutter
+nautilus</p>
+<p>$ systemctl enable gdm</p>
+<p>gnome settings
+mouse acceleration
+Use gnow-tweaks and set acceleration to flat</p>
+<p>change theme to adwaita dark</p>
+<p><a href="https://extensions.gnome.org/">https://extensions.gnome.org/</a>
+gnome extentions
+arch linux updated indicator
+dash to dock (a moze plank? pacman -S plank)
+shelltile (!)
+AppKeys
+auto move windows</p>
+<p>plank</p>
+<p>keepass (gnome-passwordsafe)
+$ pacman -S gnome-passwordsafe</p>
+<p>jak synchronizowac plik z haslami z google drive?
+chromium
+privacy badger
+adblock</p>
+<p>widevine to play protected content like Netlfix
+git clone <a href="https://aur.archlinux.org/chromium-widevine.git">https://aur.archlinux.org/chromium-widevine.git</a>
+makepkg -cCsi</p>
+<p>flatpak
+$ pacman -S flatpak
+sudo flatpak remote-add &ndash;if-not-exists flathub <a href="https://dl.flathub.org/repo/flathub.flatpakrepo">https://dl.flathub.org/repo/flathub.flatpakrepo</a></p>
+<p>spotify
+via aur package
+or with flatpak
+teamspeak
+pacman -S teamspeak3
+steam
+enambel multilib
+sudo pacman -S lib32-nvidia-utils
+python
+pycharm</p>
+<p>terminator?</p>
+<p>pacman -S nvidia nvidia-settings lib32-nvidia-utils</p>
+<p>gnome
+pacman -S gnome gnome-tweaks
+baobab
+eog
+evince
+gdm
+gedit
+gnome-calculator
+gnome-keyring
+gnome-session
+gnome-shell
+gnome-shell-extentions
+mutter
+nautilus
+file-roller
+control-center
+password-safe (warning use with python-pykeepass 3.0.3-4-any)
+screenshot
+settings-daemon
+system-monitor
+gvfs
+gvfs-afc
+gvfs-google
+gvfs-mtp
+totem</p>
+<h3 id="chromium">chromium</h3>
+<p>chromium chrome-gnome-shell
+aur: chromium-widevine</p>
+<h3 id="backup-and-sys-utils">backup and sys utils</h3>
+<p>aur: timeshift
+aur: backintime
+aur: stacer</p>
+<h3 id="graphic-and-video">graphic and video</h3>
+<p>darktable
+eog
+totem (video player, installl gst-libav to play mp4)</p>
+<h3 id="terminals">terminals</h3>
+<p>terminator
+cool-retro-term (?)</p>
+<h3 id="music">music</h3>
+<p>aur: spotify</p>
+<h3 id="games">games</h3>
+<p>steam
+teamspeak3</p>
+<h3 id="development">development</h3>
+<p>pycharm-community-edition
+(sql: postgresql, dbeaver)</p>
+<h1 id="what-do-i-need-and-why">What do I need. And why.</h1>
+<p>Core
+netutils
+efibootmgr
+grub
+vim, nano
+sudo, visudo
+nvidia drivers (nouveau tears a lot, not usable)
+btrfs-progs, snapper, snap-pac
+fat, exfat and ntfs</p>
+<p>Internet
+chrome with addons adblock and privacy badger
+why: mail, news, youtube, netflix, hbogo, guitar course
+<a href="https://chrome.google.com/webstore/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom">https://chrome.google.com/webstore/detail/adblock-%E2%80%94-best-ad-blocker/gighmmpiobklfepjocnamgkkbiglidom</a>
+<a href="https://chrome.google.com/webstore/detail/privacy-badger/pkehgijcmpdhfbdbbnkijodmdjhbjlgp">https://chrome.google.com/webstore/detail/privacy-badger/pkehgijcmpdhfbdbbnkijodmdjhbjlgp</a>
+gnome shell extentions: <a href="https://chrome.google.com/webstore/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep">https://chrome.google.com/webstore/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep</a>
+sudo pacman -S chrome-gnome-shell</p>
+<p>Music
+spotify
+why: because I like to listen music
+musescore
+for music notation
+audacity
+for audio editing
+Yousician (through wine)
+why: to check if and how it works
+Graphic
+eog
+why: quick and simple image viewer
+gimp
+why: for graphic manipulation
+darktable
+digital photo darkroom, like adobe lightroom</p>
+<p>Games
+Steam
+why: because I like to play sometimes
+wine
+why: to play windows games and maybe to run some windows programs</p>
+<p>Communication
+TeamSpeak
+why: to talk with tomek mostly
+Skype (aur)
+to talk with mom and share pic with tomek
+TeamViewer (aur)
+to help mom remotely</p>
+<p>System
+lts kernel
+backup, timeshift
+GUI (gnome for start, see gnome section for details)
+screenshot tool - to take screenshots of course
+image viewer (eog)
+disk usage analyzer (baobab)
+file manager (nautilus)
+terminal (no gterm, use terminator)
+brasero (simple cd recording software)
+calc
+pdf viewer (evince, what about e-pit, is it possible to do it online?)
+text editor (gedit, maybe something more sophisticated with python, sql, json and xml
+support)
+Google drive integration (Google Backup and Sync through wine?)
+password manager (password safe, keepassxc or keepass through wine)
+nvidia utils
+archlinux pacman updates notifier
+iTunes (through wine) (to connect and manage iPhone if ever needed?)
+automount usb removable devices like drives and camera (my eos350, the other cannon, iphone, pocketbook. it should handle devices which act as drives as well as print/ptp)
+calibre - ebook reader
+timeshift - system config backup
+stacer</p>
+<p>Printing
+Samsung M2022W drivers by usb and lan/wi-fi</p>
+<p>MS Office
+use office.com</p>
+<p>others
+kdenlive - video editing soft
+vlc video player</p>
+<p>Development
+python
+why: for fun and learning
+PyCharm
+why: good python IDE
+DBeaver
+why: good sql editor if I would need one
+postgresql
+why: to help Adrian with sql
+text editor with python and sql support
+why: for simplicity over PyCharm or DBeaver</p>
+</div>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2020 My notes on Linux, python, food, life and everyting. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>
