@@ -59,70 +59,121 @@ mkfs.btrfs /dev/mapper/cryptroot
 ```
 
 # mount and create subvolumes
+create subvolumes
 ```
 mkdir /mnt/{btrfs_root,arch}
 mount /dev/mapper/cryptroot /mnt/btrfs_root
-----
-# the install
-## the net
+btrfs subvolume create /mnt/btrfs_root/@
+btrfs subvolume create /mnt/btrfs_root/@home
+btrfs subvolume create /mnt/btrfs_root/@snapshots
+mkdir /mnt/btrfs_root/@/var
+btrfs subvolume create /mnt/btrfs_root/@/var/log
+btrfs subvolume create /mnt/btrfs_root/@/var/tmp
+mkdir -p /mnt/btrfs_root/@/var/cache/pacman
+btrfs subvolume create /mnt/btrfs_root/@/var/cache/pacman/pkg
+```
+and mount all together
+```
+mount /dev/mapper/cryptroot /mnt/arch -o subvol=@
+mkdir /mnt/arch/{efi,home}
+mount /dev/mapper/cryptroot /mnt/arch/home -o subvol=@home
+mount /dev/sda1 /mnt/arch/efi
+```
+# install
+## core arch and utilities
+```
+$ pacstrap /mnt/arch base linux linux-firmware efibootmgr grub vim sudo dosfstools btrfs-progs man-db man-pages texinfo intel-ucode bash-completion
+```
+create fstab
+```
+$ genfstab /mnt/arch >> /mnt/arch/etc/fstab
+```
+change root to new arch install
 
-## partitioning
-mount
-$ swapon -L swap
-$ mount -L arch_root /mnt
-$ mkdir -p /mnt/{efi,home/arch}
-$ mount /dev/sda2 /mnt/efi
-$ mount /dev/sdc2 /mnt/home/arch
-
-pacman install core
-$ pacstrap /mnt base linux linux-firmware
-
-to install the very core
-
-$ genfstab -L /mnt >> /mnt/etc/fstab
-
-$ arch-chroot /mnt
-
-install basic tools
-
-$ pacman -S efibootmgr grub os-prober vim sudo dosfstools exfat-utils ntfs-3g man-db man-pages texinfo intel-ucode pacman-contrib bash-completion
-timezone
-
+```
+arch-chroot /mnt/arch
+```
+## set timezone and system clock
+```
 $ ln -sf /usr/share/zoneinfo/Poland /etc/localtime
 $ hwclock --systohc
+```
 
-localization
-$ vim /etc/locale.gen
+## set locales
+uncomment en_US.UTF-8 and pl_PL.UTF-8 in `/etc/locale.gen`
+generate locales
+```
+locale-gen
+```
+set `/etc/locale.conf`
+```
+LANG=en_US.UTF-8
+LC_NUMERIC=pl_PL.UTF-8
+LC_TIME=pl_PL.UTF-8
+LC_MONETARY=pl_PL.UTF-8
+LC_PAPER=pl_PL.UTF-8
+LC_MEASUREMENT=pl_PL.UTF-8
+```
 
-$ locale-gen
-$ echo LANG=en_US.UTF-8 > /etc/locale.conf
+## set keyboard layout and console font
 
-keyboard layout to test po polish programmers with polish console font
-also set date to iso, numbers, currency and other local formats
+TODO
 
-network
+## network configuration
+set hostname
+```
 $ echo archie > /etc/hostname
+```
+`/etc/hosts`
+```
+127.0.0.1 localhost
+::1 localhost
+127.0.0.1 archie.localdomain archie
+```
 
-$ echo 127.0.0.1 localhost > /etc/hosts
-$ echo ::1 localhost >> /etc/hosts
-$ echo 127.0.0.1 archie.localdomain archie >> /etc/hosts
-
-dhcp using systemctl
-/etc/systemd/network/20-wired.network
+set dhcp using systemd
+`/etc/systemd/netwok/20-wired.network`
+```
 [Match]
-Name=enp0s3
+#Name=enp0s3
+Name=en*
 
 [Network]
 DHCP=ipv4
-
+DNS=8.8.8.8
+DNS=8.8.4.4
+```
+enable network on start
+```
 $ systemctl enable systemd-networkd
 $ systemctl enable systemd-resolved
-root password
+```
+
+## set root password
+
+```
 passwd
+```
+
+## grub with encryption
+install grub into efi partition
+```
+$ grub-install --boot-directory=/efi --bootloader-id=grub --efi-directory=/efi --target=x86_64-efi
+```
+
+add efi menu entry for grub
+[efi menu entry](../grub)
+this comes very handy especially on vm
+
+make grub aware of encrypted root partition
+
+$ grub-mkconfig -o /boot/grub/grub.cfg
+
+----
+# the install
+
 
 boot loader
-$ grub-install --target=x86_64-efi --efi=/boot --bootloader-id=GRUB
-$ grub-mkconfig -o /boot/grub/grub.cfg
 
 
 reboot
