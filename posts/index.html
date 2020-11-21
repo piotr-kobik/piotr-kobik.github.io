@@ -85,6 +85,18 @@ HOOKS=(base udev autodetect keyboard keymap consolefont modconf block *encrypt* 
 			
 				<div class="card card--2col">
 					<article class="entry card__box block">
+	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/linux/wireless/">Wireless configuration</a></h1>
+	<div class="entry__content">install wpa_supplicant
+# pacman -S wpa_supplicant create minima wpa_supplicant configuration file to allow interface to scan and update configuration /etc/wpa_supplicant/wpa_supplicant.conf
+ctrl_interface=/run/wpa_supplicant update_config=1 check interface name with:
+# ip link show start wpa_supplicant with:
+# wpa_supplicant -B -i _inteface_ -c /etc/wpa_supplicant/wpa_cupplicant.conf to update config interactively
+# wpa_cli &gt; scan &gt; scan_results &gt; add_network 0 &gt; set_network 0 ssid &quot;Your network&quot; &gt; set_network 0 psk &quot;Network password&quot; &gt; enable_network 0 &gt; save_config &gt; quit check updated config</div>
+</article>
+				</div>
+			
+				<div class="card card--2col">
+					<article class="entry card__box block">
 	<h1 class="entry__title title-excerpt"><a class="entry__title-link" href="/posts/food/jablka/">Jabłka</a></h1>
 	<div class="entry__content">dobre  Ligol  dają radę  Szampion Jonagold - kruche, słodkie, miąsz średnio-twardy  nie kupować </div>
 </article>

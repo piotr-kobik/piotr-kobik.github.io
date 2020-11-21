@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en-us">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Wireless configuration | My notes on Linux, python, food, life and everyting</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body>
+	<header class="header">
+	<a class="logo" href="/">My notes on Linux, python, food, life and everyting</a>
+	
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Wireless configuration</h1>
+				<div class="entry__content"><p>install wpa_supplicant</p>
+<pre><code># pacman -S wpa_supplicant
+</code></pre><p>create minima wpa_supplicant configuration file to allow interface to scan and update configuration
+<code>/etc/wpa_supplicant/wpa_supplicant.conf</code></p>
+<pre><code>ctrl_interface=/run/wpa_supplicant
+update_config=1
+</code></pre><p>check interface name with:</p>
+<pre><code># ip link show
+</code></pre><p>start wpa_supplicant with:</p>
+<pre><code># wpa_supplicant -B -i _inteface_ -c /etc/wpa_supplicant/wpa_cupplicant.conf
+</code></pre><p>to update config interactively</p>
+<pre><code># wpa_cli
+&gt; scan
+&gt; scan_results
+&gt; add_network
+0
+&gt; set_network 0 ssid &quot;Your network&quot;
+&gt; set_network 0 psk &quot;Network password&quot;
+&gt; enable_network 0
+&gt; save_config
+&gt; quit
+</code></pre><p>check updated config</p>
+<pre><code># cat /etc/wpa_supplicant/wpa_supplicant.conf
+ctrl_interface=/run/wpa_supplicant
+update_config=1
+
+network={
+	ssid=&quot;your network&quot;
+	psk=&quot;network password&quot;
+}
+</code></pre><p>replace psk with wpa_passphrase</p>
+<pre><code># wpa_passphrase MYSSID passphrase
+</code></pre><p>and update <code>wpa_supplicant.conf</code></p>
+<pre><code>network={
+	ssid=&quot;your network&quot;
+	#psk=&quot;network password&quot;
+	psk=59e012901ef8fe8efff9e810232efe1
+}
+</code></pre><p>copy <code>wpa_supplicant.conf</code> as <code>wpa_supplicant-interface.conf</code>
+enable systemd service for this interface</p>
+<pre><code># systemctl enable wpa_supplicant@inteface
+</code></pre><p>create systemd wireless config
+<code>/etc/systemd/network/25-wireless.network</code></p>
+<pre><code>[Match]
+Name=wl*
+
+[Network]
+DHCP=ipv4
+DNS=8.8.8.8
+DNS=8.8.4.4
+
+[DHCP]
+#set wired to 10
+RouteMetric=20
+</code></pre></div>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2020 My notes on Linux, python, food, life and everyting. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+</body>
+</html>

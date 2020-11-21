@@ -72,6 +72,20 @@ HOOKS=(base udev autodetect keyboard keymap consolefont modconf block *encrypt* 
     </item>
     
     <item>
+      <title>Wireless configuration</title>
+      <link>http://piotr-kobik.github.io/posts/linux/wireless/</link>
+      <pubDate>Sat, 16 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://piotr-kobik.github.io/posts/linux/wireless/</guid>
+      <description>install wpa_supplicant
+# pacman -S wpa_supplicant create minima wpa_supplicant configuration file to allow interface to scan and update configuration /etc/wpa_supplicant/wpa_supplicant.conf
+ctrl_interface=/run/wpa_supplicant update_config=1 check interface name with:
+# ip link show start wpa_supplicant with:
+# wpa_supplicant -B -i _inteface_ -c /etc/wpa_supplicant/wpa_cupplicant.conf to update config interactively
+# wpa_cli &amp;gt; scan &amp;gt; scan_results &amp;gt; add_network 0 &amp;gt; set_network 0 ssid &amp;quot;Your network&amp;quot; &amp;gt; set_network 0 psk &amp;quot;Network password&amp;quot; &amp;gt; enable_network 0 &amp;gt; save_config &amp;gt; quit check updated config</description>
+    </item>
+    
+    <item>
       <title>Jabłka</title>
       <link>http://piotr-kobik.github.io/posts/food/jablka/</link>
       <pubDate>Fri, 15 May 2020 13:59:35 +0200</pubDate>

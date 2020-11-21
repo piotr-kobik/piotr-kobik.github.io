@@ -1,7 +1,7 @@
 ---
 title: "Wireless configuration"
 date: 2020-05-16
-draft: true
+draft: false
 ---
 
 install wpa_supplicant
